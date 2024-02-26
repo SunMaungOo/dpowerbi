@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DPowerBi</title>
     <link rel="stylesheet" href="assets/style/style.css">
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
     <script src="assets/js/jszip.min.js"></script>
     <script src="assets/js/pbit.js"></script>
-    <script src="assets/js/api.js"></script>
+    <script src="assets/js/standaloneparser.js"></script>
     <script src="assets/js/app.js"></script>
 </head>
 <body>
     <input type="file" id="fileInput" accept="pbit">
     <button id="export">Export</button>
-    <label id="status">Parser : Offline</label>
     <div class="container">
         <div id="sidebar" class="sidebar">
         </div>
@@ -23,9 +23,19 @@
     </div>
     <script>
 
-        let app = new App("sidebar","code","export","status",getSqlTables,checkIsServiceOnline);
+        async function main(){
 
-        app.run("fileInput");
+            let parser = new Parser();
+            await parser.init();
+
+            let app = new App("sidebar","code","export","status",parser.getSqlTables,null);
+            app.run("fileInput");
+
+        }
+
+        main();
+
+
 
     </script>
 </body>

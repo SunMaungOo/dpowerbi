@@ -1,7 +1,16 @@
 
 class App{
 
-    constructor(sideBarId,textAreaId,exportId,statusId){
+    /**
+     * 
+     * @param {*} sideBarId 
+     * @param {*} textAreaId 
+     * @param {*} exportId 
+     * @param {*} statusId 
+     * @param {CallableFunction} funcParser which accept sql and dialect and return Promise<Array<string>>
+     * @param {CallableFunction} funcCheckStatus no input function and return Promise<boolean>
+     */
+    constructor(sideBarId,textAreaId,exportId,statusId,funcParser,funcCheckStatus){
 
         this.sideBar = new SideBarUI(sideBarId,this.callOnItemClicked.bind(this));
 
@@ -18,6 +27,11 @@ class App{
         });
 
         this.statusLbl = document.getElementById(statusId);
+
+        this.funcParser = funcParser;
+
+        this.funcCheckStatus = funcCheckStatus;
+
     }
 
     run(fileInputId){
@@ -48,15 +62,19 @@ class App{
         });
 
 
-        checkIsServiceOnline()
-        .then((status)=>{
-            if(status){
-                this.statusLbl.innerText = "Parser : Online";
-            }
-        })
-        .catch(err=>{
-            this.statusLbl.innerText = "Parser : Offline";
-        });
+        if(this.funcCheckStatus){
+
+            this.funcCheckStatus()
+            .then((status)=>{
+                if(status){
+                    this.statusLbl.innerText = "Parser : Online";
+                }
+            })
+            .catch(err=>{
+                this.statusLbl.innerText = "Parser : Offline";
+            });
+
+        }
     }
 
     /**
@@ -81,7 +99,7 @@ class App{
     
             const sqlTablePromises = sqlDataset.map((dataset) => {
     
-                return getSqlTables(dataset.query, "tsql")
+                return this.funcParser(dataset.query, "tsql")
                     .then(tables => {
                         return {
                             "name": dataset.name,
