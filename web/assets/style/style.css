@@ -1,0 +1,68 @@
+ody,html{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.container{
+    display: flex;
+    height: 100vh;
+    margin-top: 20px;
+}
+
+.sidebar {
+    /*fixed width*/
+    flex: 0 0 250px;
+    background-color: #333;
+    color: white;
+    /* Set a max-height for the sidebar */
+    max-height: 100vh;
+    /* Make the sidebar scrollable when it exceeds the max-height */
+    overflow-y: auto;
+}
+
+.siderbar-header{
+    padding: 20px;
+    text-align: center;
+}
+
+/*sidebar navigation*/
+.nav-link{
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    transition: border-left-color 0.3s;
+    /*does not show border initially*/
+    border-left: 4px solid transparent;
+}
+
+.nav-link.active{
+    /*border color on selected item*/
+    border-left-color: #0366d6;
+    background: #444;
+}
+
+.nav-link:hover{
+    background: #444;
+}
+
+.section-divider{
+    background-color: #444;
+    height: 1px;
+    margin: 10px 0;
+}
+
+.section-header{
+    padding: 5px 20px;
+    font-weight: bold;
+    background-color: #333;
+    /*change text color*/
+    color: #999;
+    font-size: 14px;
+}
+
+.main-content{
+    flex: 1;
+    padding: 20px;
+}
