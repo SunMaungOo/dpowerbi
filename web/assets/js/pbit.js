@@ -5,7 +5,7 @@ function stringUnquote(quotedString){
 /**
  * Get the query represent in Query =  , m expression
  * @param {*} expression 
- * @returns 
+ * @returns sql string
  */
 function getSqlQuery(expression){
 
@@ -14,6 +14,65 @@ function getSqlQuery(expression){
     let endIndex = expression.lastIndexOf('"');
 
     return expression.substring(startIndex, endIndex);
+}
+
+/**
+ * In Source{[Schema="foo",Item="bar"]}'
+ * Return 
+ * {
+ *   "schema":"foo",
+ *   "item":"bar"
+ * }
+ * @param {*} expression 
+ * @returns 
+ */
+function extractValues(expression){
+
+    // Match everything between the curly braces
+    
+       let match = expression.match(/\{([^}]*)\}/);
+
+       if (match) {
+           
+           let parts = match[1].split(",");
+
+           let result = {};
+
+           let newParts = []
+           newParts.push(parts[0].substring(1));
+           newParts.push(parts[1].substring(0,parts[1].length-2));
+
+            // Extract key-value pairs
+
+           parts.forEach(part => {
+
+                let [key, value] = part.split("=");
+
+                key=key.replace("[","").trim().toLowerCase();
+
+                value = value.replace(/"/g, "").replace("]","").trim();
+
+                result[key] = value;
+
+           });
+
+           return result;
+       }
+       return null;
+}
+
+/**
+ * Transform the direct table expression to sql query
+ * @param {*} expression 
+ * @returns sql query
+ */
+function getImportQuery(expression){
+
+    let map = extractValues(expression);
+
+    const query = `SELECT * FROM ${map.schema}.${map.item}`;
+
+    return query;
 }
 
 function cleanSqlQuery(query){
@@ -127,10 +186,18 @@ function getDataset(pbitFile){
                 && dataset.source.hasOwnProperty("expression");
             })                
             .map((dataset)=>{
+
+                let tableImportExpression = null;
+
+                if(dataset.source.expression.length>=2){
+                    tableImportExpression = dataset.source.expression[2];
+                }
+
                 return {
                     "name":dataset.name,
                     //second line of source in define what kind of dataset it is
-                    "expression":dataset.source.expression[1]
+                    "expression":dataset.source.expression[1],
+                    "tableImportExpression":tableImportExpression
                 };
             }).map((dataset)=>{
 
@@ -138,10 +205,18 @@ function getDataset(pbitFile){
 
                 const sourceType = sourceExpression.split("(")[0]
 
+                const functionParameterLength = dataset.expression.split("(")[1].split(")")[0].split(",").length-1;
+                
+                //to check whether the table is imported as direct import without any sql statement
+
+                const isTableDirectImport = (functionParameterLength==1);
+
                 return {
                     "name":dataset.name,
                     "expression":dataset.expression,
-                    "sourceType":sourceType.trim()
+                    "sourceType":sourceType.trim(),
+                    "isTableDirectImport":isTableDirectImport,
+                    "tableImportExpression":dataset.tableImportExpression
                 }
             })
             .filter((dataset)=>{
@@ -156,9 +231,23 @@ function getDataset(pbitFile){
 
                 const database = stringUnquote(blocks[1].trim());
 
-                const queryExpression = blocks.slice(2).join(",");
+                let queryExpression = "";
 
-                const query = cleanSqlQuery(getSqlQuery(queryExpression));
+                let query = "";
+
+                if(dataset.isTableDirectImport){
+
+                    queryExpression = dataset.tableImportExpression;
+
+                    query = getImportQuery(queryExpression);
+
+                }
+                else{
+
+                    queryExpression = blocks.slice(2).join(",");
+
+                    query = cleanSqlQuery(getSqlQuery(queryExpression));
+                }
 
 
                 return {
@@ -166,7 +255,8 @@ function getDataset(pbitFile){
                     "host":host,
                     "database":database,
                     "orgQuery":queryExpression,
-                    "query": query
+                    "query": query,
+                    "isTableDirectImport":dataset.isTableDirectImport
                 };
 
             });

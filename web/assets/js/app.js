@@ -108,7 +108,8 @@ class App{
                             "orgQuery": dataset.orgQuery,
                             "query": dataset.query,
                             //table which is used by the query.Maybe null on parsing error
-                            "tables": tables
+                            "tables": tables,
+                            "isTableDirectImport":dataset.isTableDirectImport
                         };
     
                     });
@@ -144,9 +145,16 @@ class App{
 
             message += "\n";
             message += "*/\n\n";
-        
-            message += `${jsonObj.query}`;
+            
+            //if the table is the direct import query , show the direct import query "m" expression
 
+            
+            if(jsonObj.isTableDirectImport=="true"){
+                message += jsonObj.orgquery;
+            }
+            else{
+                message += jsonObj.query;
+            }
 
         }
 
@@ -235,6 +243,8 @@ class SideBarUI{
         sideBarItem.setAttribute("data-orgQuery",data.orgQuery);
         sideBarItem.setAttribute("data-query",data.query);
         sideBarItem.setAttribute("data-tables",data.tables);
+        sideBarItem.setAttribute("data-is-table-direct-import",data.isTableDirectImport);
+
         sideBarItem.addEventListener("click",(event)=>{
 
             this.callOnItemClicked(event.target.dataset);
