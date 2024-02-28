@@ -23,6 +23,8 @@ function cleanSqlQuery(query){
     //replace a duplicate double quote to a single double quote
     query = query.replace(/"{2,}/g, '"');
 
+    query = query.replace(/#\(tab\)/g, " ");
+
     return query;
 }
 
