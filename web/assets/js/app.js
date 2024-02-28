@@ -44,6 +44,10 @@ class App{
 
         fileInput.addEventListener("change",(event)=>{
 
+            this.state = null;
+            
+            this.sideBar.resetSideBarState();
+
             const file = event.target.files[0];
 
             this.getTableDataset(file)
@@ -273,6 +277,10 @@ class SideBarUI{
 
 
     resetSideBarState(){
-        this.elmSideBar
+
+        while(this.elmSideBar.firstChild){
+            this.elmSideBar.removeChild(this.elmSideBar.firstChild);
+        }
+
     }
 }
