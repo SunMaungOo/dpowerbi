@@ -18,6 +18,18 @@ class App{
 
         this.exportBtn = document.getElementById(exportId);
 
+        /*
+        Array of
+         {
+            name:str,
+            host:str,
+            database:str,
+            orgQuery:str,
+            query:str,
+            tables:Array<str>
+            isTableDirectImport:str
+         }
+        */
         this.state = null;
 
         this.exportBtn.addEventListener("click",(event)=>{
@@ -91,6 +103,7 @@ class App{
      *   orgQuery:str,
      *   query:str,
      *   tables:Array<str>
+     *   isTableDirectImport:str
      * }
      * @param {File} pbitFile 
      * @returns Promise<Array<JsonObject>>
@@ -171,15 +184,45 @@ class App{
             alert("There is no data to export");
         }
 
+        //key:database object , value: array of tables
         const usedTable = this.state.filter((jsonObjs)=>{
             return jsonObjs.tables!=null;
         }).flatMap((jsonObjs)=>{
-            return jsonObjs.tables;
+
+            return {
+                "object":`${jsonObjs.host}.${jsonObjs.database}`,
+                "tables":jsonObjs.tables
+            };
+        }).reduce((acc,current)=>{
+
+            if(!acc[current.object]){
+                acc[current.object] = [];
+            }
+
+            acc[current.object].push(...current.tables);
+
+            return acc;
+
+        },{});
+
+        const exportTables = new Map();
+
+        //get the unique table name
+        
+        for(let key in usedTable){
+            exportTables.set(key,Array.from(new Set(usedTable[key])));
+        }
+
+        let csvRows="object,table";
+
+        exportTables.forEach((tables,object)=>{
+            tables.forEach((table)=>{
+                csvRows+="\n";
+                csvRows+=`${object},${table}`;
+            });
         });
 
-        const uniqueUsedTable = [...new Set(usedTable)];
-
-        const blob = new Blob([uniqueUsedTable.join("\n")],{
+        const blob = new Blob([csvRows],{
             "type":"text/csv;charset=utf-8;"
         });
 
@@ -195,6 +238,7 @@ class App{
         downloadLink.click();
 
         document.body.removeChild(downloadLink);
+
 
     }
 

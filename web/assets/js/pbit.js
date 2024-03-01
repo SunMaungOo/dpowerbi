@@ -229,7 +229,8 @@ function getDataset(pbitFile){
 
                 const host = stringUnquote(blocks[0].split("(")[1].trim());
 
-                const database = stringUnquote(blocks[1].trim());
+                let database = stringUnquote(blocks[1].trim());
+                database = stringUnquote(database.substring(0,database.length-1));
 
                 let queryExpression = "";
 
